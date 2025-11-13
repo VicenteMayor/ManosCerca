@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ManosCerca - Encuentra trabajadores locales</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Encabezado -->
+    <header class="header">
+        <div class="container">
+            <div class="logo-section">
+                <h1 class="logo"><i class="fas fa-hands-helping"></i> ManosCerca</h1>
+                <p class="tagline">Conectando habilidades con necesidades locales</p>
+            </div>
+            <div class="privacy-notice" id="privacyNotice">
+                <p><i class="fas fa-shield-alt"></i> Tus datos se almacenan localmente en tu navegador. Al compartir un perfil, expones tu información de contacto.</p>
+                <button id="closePrivacyNotice"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="main-container">
+        <!-- Panel lateral izquierdo (filtros) -->
+        <aside class="sidebar">
+            <div class="search-section">
+                <h2>Encuentra servicios cerca de ti</h2>
+                
+                <!-- Filtros -->
+                <div class="filter-group">
+                    <label for="categoryFilter">Categoría</label>
+                    <select id="categoryFilter" multiple>
+                        <option value="gasfiteria">Gasfitería</option>
+                        <option value="carpinteria">Carpintería</option>
+                        <option value="electricidad">Electricidad</option>
+                        <option value="jardineria">Jardinería</option>
+                        <option value="reparacion">Reparaciones generales</option>
+                        <option value="electronica">Electrónica</option>
+                        <option value="pintura">Pintura</option>
+                        <option value="mecanica">Mecánica</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="distanceFilter">Distancia máxima</label>
+                    <select id="distanceFilter">
+                        <option value="5">5 km</option>
+                        <option value="10">10 km</option>
+                        <option value="20">20 km</option>
+                        <option value="50">50 km</option>
+                        <option value="all">Cualquier distancia</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="keywordFilter">Palabra clave</label>
+                    <input type="text" id="keywordFilter" placeholder="Ej: sillas, tubería, instalación...">
+                </div>
+                
+                <button id="applyFilters" class="btn-primary">Aplicar filtros</button>
+                <button id="clearFilters" class="btn-secondary">Limpiar filtros</button>
+            </div>
+            
+            <!-- Resultados -->
+            <div class="results-section">
+                <h3>Resultados <span id="resultsCount">(0)</span></h3>
+                <div id="resultsList" class="results-list">
+                    <!-- Los resultados se cargan aquí dinámicamente -->
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mapa -->
+        <section class="map-section">
+            <div id="map"></div>
+            <div class="map-controls">
+                <button id="locateMe" class="btn-locate">
+                    <i class="fas fa-location-arrow"></i> Mi ubicación
+                </button>
+                <button id="addProvider" class="btn-add">
+                    <i class="fas fa-plus"></i> Ofrecer servicio
+                </button>
+            </div>
+        </section>
+        
+        <!-- Panel lateral derecho (detalles) -->
+        <aside class="details-panel" id="detailsPanel">
+            <div class="panel-header">
+                <h3>Detalles del proveedor</h3>
+                <button id="closeDetailsPanel"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="panel-content" id="panelContent">
+                <!-- Los detalles se cargan aquí dinámicamente -->
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modal de registro -->
+    <div class="modal" id="registrationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Registro de proveedor</h2>
+                <button id="closeRegistrationModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="providerForm">
+                    <div class="form-group">
+                        <label for="providerName">Nombre completo *</label>
+                        <input type="text" id="providerName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="providerEmail">Correo electrónico *</label>
+                        <input type="email" id="providerEmail" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="providerPhone">Teléfono *</label>
+                        <input type="tel" id="providerPhone" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="providerCategory">Categoría de servicio *</label>
+                        <select id="providerCategory" required>
+                            <option value="">Selecciona una categoría</option>
+                            <option value="gasfiteria">Gasfitería</option>
+                            <option value="carpinteria">Carpintería</option>
+                            <option value="electricidad">Electricidad</option>
+                            <option value="jardineria">Jardinería</option>
+                            <option value="reparacion">Reparaciones generales</option>
+                            <option value="electronica">Electrónica</option>
+                            <option value="pintura">Pintura</option>
+                            <option value="mecanica">Mecánica</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="providerDescription">Descripción de servicios *</label>
+                        <textarea id="providerDescription" rows="3" required placeholder="Describe qué servicios ofreces..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Ubicación *</label>
+                        <div class="location-options">
+                            <button type="button" id="detectLocation" class="btn-secondary">
+                                <i class="fas fa-location-crosshairs"></i> Detectar automáticamente
+                            </button>
+                            <span class="or-text">o</span>
+                            <div class="manual-location">
+                                <input type="text" id="manualLat" placeholder="Latitud">
+                                <input type="text" id="manualLng" placeholder="Longitud">
+                            </div>
+                        </div>
+                        <div id="locationStatus" class="location-status"></div>
+                    </div>
+                    
+                    <div class="privacy-warning">
+                        <p><i class="fas fa-exclamation-triangle"></i> Al registrarte, aceptas que tu información de contacto será visible para otros usuarios de la plataforma.</p>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Registrar como proveedor</button>
+                        <button type="button" id="cancelRegistration" class="btn-secondary">Cancelar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de importación/exportación -->
+    <div class="modal" id="dataModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="dataModalTitle">Compartir perfil</h2>
+                <button id="closeDataModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="exportSection">
+                    <p>Comparte tu perfil con otros usuarios:</p>
+                    <div class="share-options">
+                        <button id="generateLink" class="btn-primary">
+                            <i class="fas fa-link"></i> Generar enlace compartible
+                        </button>
+                        <button id="downloadJSON" class="btn-secondary">
+                            <i class="fas fa-download"></i> Descargar como JSON
+                        </button>
+                    </div>
+                    <div id="generatedLink" class="generated-link" style="display: none;">
+                        <label>Enlace para compartir:</label>
+                        <div class="link-container">
+                            <input type="text" id="shareLink" readonly>
+                            <button id="copyLink" class="btn-copy">
+                                <i class="fas fa-copy"></i> Copiar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="importSection" style="display: none;">
+                    <p>Importa un perfil de proveedor:</p>
+                    <div class="import-options">
+                        <button id="uploadJSON" class="btn-primary">
+                            <i class="fas fa-upload"></i> Cargar archivo JSON
+                        </button>
+                        <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+                        <div class="or-divider">
+                            <span>o</span>
+                        </div>
+                        <div class="import-link">
+                            <label>Pega un enlace de perfil:</label>
+                            <input type="text" id="importLink" placeholder="https://...">
+                            <button id="importFromLink" class="btn-primary">Importar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="db.js"></script>
+    <script src="utils.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
